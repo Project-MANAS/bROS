@@ -1,9 +1,8 @@
-# ****bROS****
----
-bROS is a complete replacement for the move_base package in ROS along with many performance improvements and addition of many features to ROS.
+# **bROS**
+bROS is a modular navigation stack built by Project MANAS. It is a complete replacement for the move_base package in ROS along with many performance improvements and addition of many features to ROS.
 bROS is targeted mainly at ROS 2 so that it is futureproof and inline with the latest new technologies. Compatibility with ROS 1 may be added later.
 
-### ****Planned Features****
+### **Planned Features**
 ---
 1. CUDA accelerated RViz
 2. Planning
