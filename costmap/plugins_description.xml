@@ -1,0 +1,13 @@
+<class_libraries>
+  <library path="layers">
+    <class type="costmap::MapLayer"  base_class_type="costmap::Layer">
+      <description>Inputs occupancy grid and set costs in master layer</description>
+    </class>
+    <class type="costmap::ObstacleLayer"  base_class_type="costmap::Layer">
+      <description>Inputs occupancy grid and set costs in master layer</description>
+    </class>
+    <class type="costmap::InflationLayer"  base_class_type="costmap::Layer">
+      <description>Inputs occupancy grid and set costs in master layer</description>
+    </class>
+  </library>
+</class_libraries>
