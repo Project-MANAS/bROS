@@ -7,12 +7,12 @@
 namespace costmap
 {
   Costmap::Costmap(
-      std::string global_frame_, std::string base_frame, double size_x, double size_y, double resolution)
+      std::string global_frame_, std::string base_frame, unsigned int size_x, unsigned int size_y, double resolution)
   {
-
+    costmap_ = new unsigned char[size_x * size_y];
   }
   Costmap::~Costmap()
   {
-
+    delete[] costmap_;
   }
 }

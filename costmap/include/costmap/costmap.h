@@ -11,7 +11,7 @@ namespace costmap
 class Costmap
 {
  public:
-  Costmap(std::string global_frame, std::string base_frame, double size_x, double size_y, double resolution);
+  Costmap(std::string global_frame, std::string base_frame, unsigned int size_x, unsigned int size_y, double resolution);
   virtual ~Costmap();
 
  protected:

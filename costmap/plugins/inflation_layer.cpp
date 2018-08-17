@@ -8,7 +8,7 @@
 
 namespace costmap
 {
-  InflationLayer::InflationLayer() : Node("hel")
+  InflationLayer::InflationLayer() : Node("inflation_layer")
   {
     RCLCPP_INFO(this->get_logger(), "FINALLY");
   }

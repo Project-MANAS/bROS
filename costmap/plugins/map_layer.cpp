@@ -8,7 +8,7 @@
 
 namespace costmap
 {
-  MapLayer::MapLayer() : Node("hello")
+  MapLayer::MapLayer() : Node("map_layer")
   {
     RCLCPP_INFO(this->get_logger(),"FINALLY");
   }

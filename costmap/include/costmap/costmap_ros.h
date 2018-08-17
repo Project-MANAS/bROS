@@ -34,12 +34,24 @@ class CostmapROS : public rclcpp::Node
 
  private:
   void pluginLoader(std::string type);
+  void mapUpdateLoop();
+  void mapUpdate();
+  void computeFreqLoop();
 
   std::string global_frame_, base_frame_;
   double size_x_, size_y_, resolution_;
-  //tf2_ros::Buffer buffer_;
+  double min_freq_, freq_;
+  rclcpp::Clock ros_clock_;
+  builtin_interfaces::msg::Time last_publish_;
+
   pluginlib::ClassLoader<Layer> plugin_loader_;
   std::string plugins_list_;
+
+  rclcpp::Clock::SharedPtr clock = std::make_shared<rclcpp::Clock>(RCL_SYSTEM_TIME);
+  tf2_ros::Buffer buffer_;
+
+  std::thread map_update_thread_, compute_freq_thread_;
+  bool map_update_thread_shutdown_;
 };
 }
 

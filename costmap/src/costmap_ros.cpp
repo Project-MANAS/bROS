@@ -12,11 +12,16 @@ namespace costmap
       Node("costmap_node"),
       global_frame_("map"),
       base_frame_("base_link"),
-      size_x_(0.0),
-      size_y_(0.0),
+      size_x_(10000.0),
+      size_y_(10000.0),
       resolution_(1.0),
+      min_freq_(1.0),
+      freq_(min_freq_),
+      ros_clock_(RCL_ROS_TIME),
       plugin_loader_("costmap", "costmap::Layer"),
-      plugins_list_("costmap::MapLayer, costmap::ObstacleLayer, costmap::InflationLayer")
+      plugins_list_("costmap::MapLayer, costmap::ObstacleLayer, costmap::InflationLayer"),
+      buffer_(clock),
+      map_update_thread_shutdown_(false)
   {
     costmap_ = new Costmap(global_frame_, base_frame_, size_x_, size_y_, resolution_);
 
@@ -35,9 +40,9 @@ namespace costmap
     }
     pluginLoader(type);
 
-//    tf2_ros::TransformListener tfl(buffer_);
-//    rclcpp::Rate rate(1.0);
-//    std::string tf_error;
+    tf2_ros::TransformListener tfl(buffer_);
+    rclcpp::Rate rate(1.0);
+    std::string tf_error;
 //    while(rclcpp::ok())
 //    {
 //      try
@@ -53,11 +58,17 @@ namespace costmap
 //        rate.sleep();
 //      }
 //    }
+
+    compute_freq_thread_ = std::thread(&CostmapROS::computeFreqLoop, this);
+    last_publish_.sec = 0;
+    map_update_thread_ = std::thread(&CostmapROS::mapUpdateLoop, this);
   }
 
   CostmapROS::~CostmapROS()
   {
-
+    map_update_thread_shutdown_ = true;
+    map_update_thread_.join();
+    compute_freq_thread_.join();
   }
 
   void CostmapROS::pluginLoader(std::string type)
@@ -71,6 +82,47 @@ namespace costmap
     }
     catch (...){
       RCLCPP_ERROR(this->get_logger(), "Could not load class %s", type.c_str());
+    }
+  }
+
+  void CostmapROS::mapUpdateLoop(){
+    double publish_cycle = 1.0 / freq_;
+    rclcpp::Rate rate(freq_);
+    builtin_interfaces::msg::Time current;
+    while(rclcpp::ok()){
+      if(!map_update_thread_shutdown_) {
+        rclcpp::Rate rate(freq_);
+        builtin_interfaces::msg::Time start = ros_clock_.now();
+        if (freq_ <= 0.0) {
+          RCLCPP_WARN(this->get_logger(), "Update frequency is set to %f. Skipping costmap update", freq_);
+          return;
+        }
+        mapUpdate();
+        current = ros_clock_.now();
+        if (last_publish_.sec + publish_cycle < current.sec) { ;
+        }
+        rate.sleep();
+        builtin_interfaces::msg::Time end = ros_clock_.now();
+        double time_taken = (end.nanosec - start.nanosec)/1e9;
+        if (time_taken > 1.0 / min_freq_) {
+          RCLCPP_WARN(this->get_logger(), "Costmap update loop failed. Desired frequency is %fHz."
+              "The loop actually took %f seconds", freq_, time_taken);
+        }
+      }
+      else{
+        RCLCPP_INFO(this->get_logger(), "Shutting down costmap...")
+      }
+    }
+  }
+
+  void CostmapROS::mapUpdate(){
+
+  }
+
+  void CostmapROS::computeFreqLoop(){
+    rclcpp::Rate rate(1.0);
+    while(rclcpp::ok()){
+      rate.sleep();
     }
   }
 }

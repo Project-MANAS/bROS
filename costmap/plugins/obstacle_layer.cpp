@@ -8,7 +8,7 @@
 
 namespace costmap
 {
-  ObstacleLayer::ObstacleLayer() : Node("hell")
+  ObstacleLayer::ObstacleLayer() : Node("obstacle_layer")
   {
     RCLCPP_INFO(this->get_logger(), "FINALLY");
   }
