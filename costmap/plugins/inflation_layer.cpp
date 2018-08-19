@@ -12,6 +12,10 @@ namespace costmap
   {
     RCLCPP_INFO(this->get_logger(), "FINALLY");
   }
+
+  InflationLayer::~InflationLayer(){
+
+  }
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::InflationLayer, costmap::Layer)

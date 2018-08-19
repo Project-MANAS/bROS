@@ -19,8 +19,10 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
@@ -40,21 +42,26 @@ endif()
 include_directories(include)
 
 add_library(costmap_ros
-        src/costmap_ros.cpp
         src/costmap.cpp
-        src/layer.cpp)
+        src/costmap_ros.cpp
+        src/layer.cpp
+        src/map_cell.cpp)
+
 ament_target_dependencies(costmap_ros
         rclcpp
         tf2
         tf2_ros
-        pluginlib)
+        pluginlib
+        nav_msgs
+        geometry_msgs
+        tf2_geometry_msgs)
 
 add_library(layers SHARED
         plugins/map_layer.cpp
         plugins/obstacle_layer.cpp
         plugins/inflation_layer.cpp)
-target_link_libraries(layers costmap_ros)
 ament_target_dependencies(layers rclcpp)
+target_link_libraries(layers costmap_ros)
 pluginlib_export_plugin_description_file(costmap plugins_description.xml)
 
 add_executable(costmap_node src/costmap_node.cpp)
@@ -66,6 +73,8 @@ install(TARGETS costmap_node
 
 install(TARGETS costmap_ros layers
         DESTINATION lib/${PROJECT_NAME})
+
 install(DIRECTORY launch
 	DESTINATION share/${PROJECT_NAME}/)
+
 ament_package()

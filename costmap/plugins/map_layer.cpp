@@ -12,6 +12,10 @@ namespace costmap
   {
     RCLCPP_INFO(this->get_logger(),"FINALLY");
   }
+
+  MapLayer::~MapLayer(){
+
+  }
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::MapLayer, costmap::Layer)

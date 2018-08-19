@@ -14,6 +14,7 @@ namespace costmap
   {
    public:
     InflationLayer();
+    ~InflationLayer();
   };
 }
 

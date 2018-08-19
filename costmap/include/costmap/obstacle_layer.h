@@ -14,6 +14,7 @@ namespace costmap
   {
    public:
     ObstacleLayer();
+    ~ObstacleLayer();
   };
 }
 

@@ -14,6 +14,7 @@ namespace costmap
   {
    public:
     MapLayer();
+    ~MapLayer();
   };
 }
 #endif //COSTMAP_MAP_LAYER_H_

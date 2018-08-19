@@ -12,6 +12,10 @@ namespace costmap
   {
     RCLCPP_INFO(this->get_logger(), "FINALLY");
   }
+
+  ObstacleLayer::~ObstacleLayer(){
+
+  }
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::ObstacleLayer, costmap::Layer)
