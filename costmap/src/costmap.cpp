@@ -33,12 +33,21 @@ namespace costmap
   };
 
   void Costmap::updateOrigin(double x, double y, double yaw){
-    //to-do
+    //TODO
   }
 
-  void Costmap::update(double x, double y, double yaw, bool rolling_window){
-    if(rolling_window)
+  void Costmap::update(double x, double y, double yaw, bool rolling_window_){
+    if(costmap_)
       updateOrigin(x, y, yaw);
+    double minx_ = 1e30, miny_ = 1e30;
+    double maxx_ = 1e-30, maxy_ = -1e30;
 
+    for(std::vector<std::shared_ptr<Layer>>::iterator plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
+      (*plugin)->updateBounds(x, y, yaw, &minx_, &maxx_, &miny_, &maxy_);
+    }
+
+    for(std::vector<std::shared_ptr<Layer>>::iterator plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
+      (*plugin)->updateCosts(minx_, maxx_, miny_, maxy_);
+    }
   }
 }

@@ -21,6 +21,7 @@
 #include <costmap/layer.h>
 #include <costmap/costmap.h>
 #include <costmap/map_layer.h>
+#include <costmap/costmap_publisher.h>
 namespace costmap
 {
 class CostmapROS : public rclcpp::Node
@@ -36,9 +37,10 @@ class CostmapROS : public rclcpp::Node
   void pluginLoader(std::string type);
   void mapUpdateLoop();
   void mapUpdate();
+  bool getRobotPose(geometry_msgs::msg::PoseStamped& pose);
+  void mapPublishLoop();
   void computeFreqLoop();
   void velocityCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
-  bool getRobotPose(geometry_msgs::msg::PoseStamped& pose);
 
   std::string global_frame_, base_frame_;
   unsigned int size_x_, size_y_;
@@ -51,17 +53,22 @@ class CostmapROS : public rclcpp::Node
   pluginlib::ClassLoader<Layer> plugin_loader_;
   std::string plugins_list_;
 
-  double min_freq_, freq_;
   rclcpp::Clock ros_clock_;
-  builtin_interfaces::msg::Time last_publish_;
-  double transform_tolerance;
 
+  double min_update_freq_, update_freq_;
   std::thread map_update_thread_;
-  bool map_update_thread_shutdown_;
+  bool updated_;
+  double transform_tolerance_;
+
+  double min_publish_freq_, publish_freq_;
+  std::thread map_publish_thread_;
+  bool map_publish_thread_shutdown_;
+  CostmapPublisher* publisher_;
 
   std::thread compute_freq_thread_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_;
   nav_msgs::msg::Odometry odom_;
+  std::string odom_topic_;
   bool vel_init;
 };
 }

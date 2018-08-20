@@ -45,7 +45,7 @@ add_library(costmap_ros
         src/costmap.cpp
         src/costmap_ros.cpp
         src/layer.cpp
-        src/map_cell.cpp)
+        src/map_cell.cpp src/costmap_publisher.cpp include/costmap/costmap_publisher.h)
 
 ament_target_dependencies(costmap_ros
         rclcpp

@@ -11,6 +11,8 @@ namespace costmap
   {
    public:
     Layer();
+    void updateBounds(double x, double y, double yaw, double* minx_, double* maxx_, double* miny_, double* maxy_);
+    void updateCosts(double minx_, double maxx_, double miny_, double maxy_);
   };
 }
 

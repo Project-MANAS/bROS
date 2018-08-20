@@ -19,6 +19,9 @@ class Costmap
   virtual ~Costmap();
   void update(double x, double y, double yaw, bool rolling_window);
   void loadPlugin(std::shared_ptr<Layer> plugin);
+  bool isRolling(){
+    return rolling_window_;
+  }
 
  protected:
   unsigned char* costmap_;
@@ -30,6 +33,7 @@ class Costmap
     unsigned int size_x_, size_y_;
     double origin_x_, origin_y_, resolution;
     double size;
+    bool rolling_window_;
 
     std::vector<std::shared_ptr<Layer>> plugins_;
 };
