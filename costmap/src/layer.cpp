@@ -11,11 +11,11 @@ namespace costmap
 
   }
 
-  void Layer::updateBounds(double x, double y, double yaw, double* minx_, double* maxx_, double* miny_, double* maxy_){
-
-  };
+  void Layer::updateBounds(unsigned int origin_x, unsigned int origin_y, double yaw,
+      unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy){
+  }
 
   void Layer::updateCosts(double minx, double maxx, double miny, double maxy){
 
-  };
+  }
 }

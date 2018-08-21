@@ -45,6 +45,7 @@ class CostmapROS : public rclcpp::Node
   std::string global_frame_, base_frame_;
   unsigned int size_x_, size_y_;
   double resolution_;
+  unsigned char default_cost_;
   bool rolling_window_;
 
   tf2::Duration duration = tf2::Duration(std::chrono::seconds(1));
@@ -70,6 +71,8 @@ class CostmapROS : public rclcpp::Node
   nav_msgs::msg::Odometry odom_;
   std::string odom_topic_;
   bool vel_init;
+
+  std::string pub_topic_;
 };
 }
 

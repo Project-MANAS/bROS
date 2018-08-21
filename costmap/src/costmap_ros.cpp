@@ -13,9 +13,10 @@ namespace costmap
       Node("costmap_ros"),
       global_frame_("map"),
       base_frame_("base_link"),
-      size_x_(100000),
-      size_y_(100000),
+      size_x_(100),
+      size_y_(100),
       resolution_(1.0),
+      default_cost_(0),
       rolling_window_(false),
       buffer_(duration),
       plugin_loader_("costmap", "costmap::Layer"),
@@ -29,10 +30,9 @@ namespace costmap
       publish_freq_(min_publish_freq_),
       map_publish_thread_shutdown_(false),
       odom_topic_("odom"),
-      vel_init(false)
+      vel_init(false),
+      pub_topic_("/costmap")
   {
-    costmap_ = new Costmap(global_frame_, base_frame_, size_x_, size_y_, resolution_);
-
     std::string type;
     for(unsigned int i = 0; i < plugins_list_.length(); i++)
     {
@@ -68,6 +68,9 @@ namespace costmap
       }
     }
 
+    costmap_ = new Costmap(global_frame_, base_frame_, 1e10, 1e10, resolution_, default_cost_);
+    costmap_ = new Costmap(global_frame_, base_frame_, 1e10, 1e10, resolution_, default_cost_);
+
     compute_freq_thread_ = std::thread(&CostmapROS::computeFreqLoop, this);
     map_update_thread_ = std::thread(&CostmapROS::mapUpdateLoop, this);
     map_publish_thread_ = std::thread(&CostmapROS::mapPublishLoop, this);
@@ -75,12 +78,13 @@ namespace costmap
     subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
       odom_topic_, std::bind(&CostmapROS::velocityCallback, this, _1));
 
-    publisher_ = new CostmapPublisher();
+    publisher_ = new CostmapPublisher(pub_topic_);
   }
 
   CostmapROS::~CostmapROS()
   {
     delete costmap_;
+    delete publisher_;
     map_publish_thread_shutdown_ = true;
     map_update_thread_.join();
     map_publish_thread_.join();
@@ -103,7 +107,6 @@ namespace costmap
   }
 
   void CostmapROS::mapUpdateLoop(){
-    double update_cycle = 1.0 / update_freq_;
     rclcpp::Rate rate(update_freq_);
     builtin_interfaces::msg::Time current;
     updated_ = false;
@@ -132,6 +135,7 @@ namespace costmap
     if(getRobotPose(pose)){
       double x = pose.pose.position.x, y = pose.pose.position.y, yaw = tf2::getYaw(pose.pose.orientation);
       costmap_->update(x, y, yaw, rolling_window_);
+      publisher_->prepareMap(costmap_);
     }
   }
 
@@ -170,14 +174,15 @@ namespace costmap
         }
         current = ros_clock_.now();
         while(!published){
-         if(!updated_){
+         if(!updated_) {
            RCLCPP_WARN(this->get_logger(), "Costmap update loop failed. Desired frequency is %fHz.");
            continue;
          }
-         else
+         else {
            publisher_->publish();
            updated_ = false;
            published = true;
+         }
         }
         published = false;
         rate.sleep();
