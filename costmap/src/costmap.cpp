@@ -10,14 +10,17 @@ namespace costmap
 {
   Costmap::Costmap(std::string global_frame, std::string base_frame,
           unsigned int size_x, unsigned int size_y, double resolution, unsigned char default_cost) :
+          Node("costmap"),
           global_frame_(global_frame),
           base_frame_(base_frame),
           minx_(0),
           miny_(0),
-          maxx_(1e10),
-          maxy_(1e10),
-          origin_x_(5e9),
-          origin_y_(5e9),
+          maxx_(10000),
+          maxy_(10000),
+          origin_x_(5000),
+          origin_y_(5000),
+          size_x_(size_x),
+          size_y_(size_y),
           resolution_(resolution)
   {
     int size = size_x * size_y;
@@ -45,8 +48,8 @@ namespace costmap
   }
 
   void Costmap::updateOrigin(double x, double y, double yaw){
-    origin_x_ = 5e9 - x / resolution_;
-    origin_y_ = 5e9 - y / resolution_;
+    origin_x_ = 5000 - x / resolution_;
+    origin_y_ = 5000 - y / resolution_;
     //TODO yaw
   }
 
@@ -57,11 +60,11 @@ namespace costmap
     std::vector<std::shared_ptr<Layer>>::iterator plugin;
 
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
-      (*plugin)->updateBounds(origin_x_, origin_y_, yaw, &minx_, &maxx_, &miny_, &maxy_);
+      (*plugin)->updateBounds(origin_x_, origin_y_, yaw, &minx_, &maxx_, &miny_, &maxy_, rolling_window);
     }
 
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
-      (*plugin)->updateCosts(minx_, maxx_, miny_, maxy_);
+      (*plugin)->updateCosts(map_cell, minx_, maxx_, miny_, maxy_, size_x_, size_y_);
     }
   }
 }

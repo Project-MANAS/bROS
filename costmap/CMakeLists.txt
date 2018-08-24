@@ -15,6 +15,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+add_compile_options(-fPIC)
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -45,7 +46,8 @@ add_library(costmap_ros
         src/costmap.cpp
         src/costmap_ros.cpp
         src/layer.cpp
-        src/map_cell.cpp src/costmap_publisher.cpp include/costmap/costmap_publisher.h)
+        src/map_cell.cpp
+        src/costmap_publisher.cpp)
 
 ament_target_dependencies(costmap_ros
         rclcpp
@@ -59,7 +61,8 @@ ament_target_dependencies(costmap_ros
 add_library(layers SHARED
         plugins/map_layer.cpp
         plugins/obstacle_layer.cpp
-        plugins/inflation_layer.cpp)
+        plugins/inflation_layer.cpp
+        )
 ament_target_dependencies(layers rclcpp)
 target_link_libraries(layers costmap_ros)
 pluginlib_export_plugin_description_file(costmap plugins_description.xml)

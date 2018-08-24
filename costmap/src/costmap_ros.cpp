@@ -20,7 +20,8 @@ namespace costmap
       rolling_window_(false),
       buffer_(duration),
       plugin_loader_("costmap", "costmap::Layer"),
-      plugins_list_("costmap::MapLayer, costmap::ObstacleLayer, costmap::InflationLayer"),
+      plugins_list_("costmap::MapLayer"),
+//      plugins_list_("costmap::MapLayer, costmap::ObstacleLayer, costmap::InflationLayer"),
       ros_clock_(RCL_ROS_TIME),
       min_update_freq_(20.0),
       update_freq_(min_update_freq_),
@@ -33,6 +34,8 @@ namespace costmap
       vel_init(false),
       pub_topic_("/costmap")
   {
+    costmap_ = new Costmap(global_frame_, base_frame_, 10000, 10000, resolution_, default_cost_);
+
     std::string type;
     for(unsigned int i = 0; i < plugins_list_.length(); i++)
     {
@@ -68,9 +71,6 @@ namespace costmap
       }
     }
 
-    costmap_ = new Costmap(global_frame_, base_frame_, 1e10, 1e10, resolution_, default_cost_);
-    costmap_ = new Costmap(global_frame_, base_frame_, 1e10, 1e10, resolution_, default_cost_);
-
     compute_freq_thread_ = std::thread(&CostmapROS::computeFreqLoop, this);
     map_update_thread_ = std::thread(&CostmapROS::mapUpdateLoop, this);
     map_publish_thread_ = std::thread(&CostmapROS::mapPublishLoop, this);
@@ -96,6 +96,7 @@ namespace costmap
     RCLCPP_INFO(this->get_logger(), "Loading class %s", type.c_str());
     try {
       std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
+      plugin->initialise(10000, 10000, 5000, 5000);
       costmap_->loadPlugin(plugin);
     }
     catch (pluginlib::LibraryLoadException e) {
@@ -175,7 +176,8 @@ namespace costmap
         current = ros_clock_.now();
         while(!published){
          if(!updated_) {
-           RCLCPP_WARN(this->get_logger(), "Costmap update loop failed. Desired frequency is %fHz.");
+           RCLCPP_WARN(this->get_logger(), "Costmap publish loop failed. Desired frequency is %fHz.", min_publish_freq_);
+           rate.sleep();
            continue;
          }
          else {
