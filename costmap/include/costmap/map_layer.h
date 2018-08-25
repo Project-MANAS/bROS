@@ -28,6 +28,7 @@ namespace costmap
     void incomingMap(const nav_msgs::msg::OccupancyGrid::SharedPtr map);
 
     std::string topic_, map_frame_;
+    bool map_received_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr subscription_;
     MapCell* map_cell;
     unsigned int minx_, maxx_, miny_, maxy_;

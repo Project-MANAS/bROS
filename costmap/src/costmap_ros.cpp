@@ -19,18 +19,19 @@ namespace costmap
       default_cost_(0),
       rolling_window_(false),
       buffer_(duration),
+      tfl(buffer_),
       plugin_loader_("costmap", "costmap::Layer"),
       plugins_list_("costmap::MapLayer"),
 //      plugins_list_("costmap::MapLayer, costmap::ObstacleLayer, costmap::InflationLayer"),
       ros_clock_(RCL_ROS_TIME),
-      min_update_freq_(20.0),
+      min_update_freq_(2.0),
       update_freq_(min_update_freq_),
       updated_(false),
       transform_tolerance_(1.0),
-      min_publish_freq_(10.0),
+      min_publish_freq_(1.0),
       publish_freq_(min_publish_freq_),
       map_publish_thread_shutdown_(false),
-      odom_topic_("odom"),
+      odom_topic_("/odom"),
       vel_init(false),
       pub_topic_("/costmap")
   {
@@ -51,10 +52,7 @@ namespace costmap
     }
     pluginLoader(type);
 
-    duration = tf2::Duration(std::chrono::seconds(1));
-    tf2_ros::TransformListener tfl(buffer_);
     rclcpp::Rate rate(1.0);
-    std::string tf_error;
     while(rclcpp::ok())
     {
       try
@@ -71,14 +69,13 @@ namespace costmap
       }
     }
 
+    subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+        odom_topic_, std::bind(&CostmapROS::velocityCallback, this, _1));
+    publisher_ = new CostmapPublisher(pub_topic_);
+
     compute_freq_thread_ = std::thread(&CostmapROS::computeFreqLoop, this);
     map_update_thread_ = std::thread(&CostmapROS::mapUpdateLoop, this);
     map_publish_thread_ = std::thread(&CostmapROS::mapPublishLoop, this);
-
-    subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-      odom_topic_, std::bind(&CostmapROS::velocityCallback, this, _1));
-
-    publisher_ = new CostmapPublisher(pub_topic_);
   }
 
   CostmapROS::~CostmapROS()
@@ -96,8 +93,8 @@ namespace costmap
     RCLCPP_INFO(this->get_logger(), "Loading class %s", type.c_str());
     try {
       std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
-      plugin->initialise(10000, 10000, 5000, 5000);
       costmap_->loadPlugin(plugin);
+      plugin->initialise(10000, 10000, 5000, 5000);
     }
     catch (pluginlib::LibraryLoadException e) {
       RCLCPP_ERROR(this->get_logger(), "Class %s does not exist", type.c_str());
@@ -121,8 +118,8 @@ namespace costmap
       current = ros_clock_.now();
       mapUpdate();
       updated_ = true;
-      rate.sleep();
       builtin_interfaces::msg::Time finish = ros_clock_.now();
+      rate.sleep();
       double time_taken = (finish.nanosec - start.nanosec)/1e9;
       if (time_taken > 1.0 / min_update_freq_) {
         RCLCPP_WARN(this->get_logger(), "Costmap update loop failed. Desired frequency is %fHz."
@@ -187,8 +184,8 @@ namespace costmap
          }
         }
         published = false;
-        rate.sleep();
         builtin_interfaces::msg::Time finish = ros_clock_.now();
+        rate.sleep();
         double time_taken = (finish.nanosec - start.nanosec)/1e9;
         if (time_taken > 1.0 / min_publish_freq_) {
           RCLCPP_WARN(this->get_logger(), "Costmap publish loop failed. Desired frequency is %fHz."

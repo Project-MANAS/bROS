@@ -50,6 +50,7 @@ class CostmapROS : public rclcpp::Node
 
   tf2::Duration duration = tf2::Duration(std::chrono::seconds(1));
   tf2_ros::Buffer buffer_;
+  tf2_ros::TransformListener tfl;
 
   pluginlib::ClassLoader<Layer> plugin_loader_;
   std::string plugins_list_;

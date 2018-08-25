@@ -30,24 +30,28 @@ namespace costmap{
   }
 
   void CostmapPublisher::prepareMap(Costmap* costmap){
-    unsigned int width = costmap -> maxx_ - costmap -> minx_ + 1;
-    unsigned int height = costmap -> maxy_ - costmap -> miny_ + 1;
+    unsigned int width = costmap->maxx_-costmap->minx_ + 1;
+    unsigned int height = costmap->maxy_-costmap->miny_ + 1;
 
     nav_msgs::msg::OccupancyGrid map;
-    map.header.frame_id = costmap -> global_frame_;
+    map.header.frame_id = costmap->global_frame_;
     map.header.stamp = ros_clock_.now();
 
-    map.info.resolution = costmap -> resolution_;
+    map.info.resolution = costmap->resolution_;
     map.info.width = width;
     map.info.height = height;
     map.info.origin.position.x = costmap -> origin_x_;
     map.info.origin.position.y = costmap -> origin_y_;
+    map.info.origin.position.z = 0.0;
     map.info.origin.orientation.w = 1.0;
 
+    RCLCPP_INFO(this->get_logger(),"width final%d", map.info.width);
+    RCLCPP_INFO(this->get_logger(),"height final%d", map.info.height);
     int k = 0;
-    for(unsigned int i = costmap -> miny_; i <= costmap -> maxy_; ++i){
-      for(unsigned int j = costmap -> minx_; j <= costmap -> maxx_; ++j){
-        map.data[k++] = costmap_translation_table_[(costmap -> map_cell[j * (i + 1)]).cost];
+    map.data.resize(map.info.width * map.info.height);
+    for(unsigned int i = costmap->miny_; i <= costmap->maxy_; ++i){
+      for(unsigned int j = costmap->minx_; j <= costmap->maxx_; ++j){
+        map.data[k++] = 0;//costmap_translation_table_[(costmap -> map_cell[i * 10000 + j]).cost];
       }
     }
     map_ = map;

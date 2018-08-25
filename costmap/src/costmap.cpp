@@ -58,7 +58,6 @@ namespace costmap
       updateOrigin(x, y, yaw);
 
     std::vector<std::shared_ptr<Layer>>::iterator plugin;
-
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
       (*plugin)->updateBounds(origin_x_, origin_y_, yaw, &minx_, &maxx_, &miny_, &maxy_, rolling_window);
     }
