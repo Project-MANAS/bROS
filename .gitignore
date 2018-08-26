@@ -11,6 +11,7 @@ docs/
 *.bag
 *.pyc
 cmake-build-debug/
+cmake-build-release/
 *.idea
 *.swp
 *.kate-swp
@@ -20,3 +21,4 @@ cmake-build-debug/
 *.bag
 *.bag.active
 *.stl
+*.directory
