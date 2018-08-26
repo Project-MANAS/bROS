@@ -35,20 +35,19 @@ namespace costmap
       vel_init(false),
       pub_topic_("/costmap")
   {
-    costmap_ = new Costmap(global_frame_, base_frame_, 10000, 10000, resolution_, default_cost_);
+    costmap_ = new Costmap(global_frame_, base_frame_, size_x_, size_y_, resolution_, default_cost_);
 
     std::string type;
-    for(unsigned int i = 0; i < plugins_list_.length(); i++)
-    {
-      if(plugins_list_[i] == ',')
+    for (char i : plugins_list_) {
+      if(i == ',')
       {
         pluginLoader(type);
         type = std::string("");
         continue;
       }
-      if(plugins_list_[i] == ' ')
+      if(i == ' ')
         continue;
-      type += plugins_list_[i];
+      type += i;
     }
     pluginLoader(type);
 
@@ -69,10 +68,8 @@ namespace costmap
       }
     }
 
-    subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-        odom_topic_, std::bind(&CostmapROS::velocityCallback, this, _1));
+    subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(odom_topic_, std::bind(&CostmapROS::velocityCallback, this, _1));
     publisher_ = new CostmapPublisher(pub_topic_);
-
     compute_freq_thread_ = std::thread(&CostmapROS::computeFreqLoop, this);
     map_update_thread_ = std::thread(&CostmapROS::mapUpdateLoop, this);
     map_publish_thread_ = std::thread(&CostmapROS::mapPublishLoop, this);
@@ -94,9 +91,9 @@ namespace costmap
     try {
       std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
       costmap_->loadPlugin(plugin);
-      plugin->initialise(10000, 10000, 5000, 5000);
+      plugin->initialise(size_x_, size_y_, size_x_/2, size_y_/2);
     }
-    catch (pluginlib::LibraryLoadException e) {
+    catch (pluginlib::LibraryLoadException& e) {
       RCLCPP_ERROR(this->get_logger(), "Class %s does not exist", type.c_str());
     }
     catch (...){
@@ -120,19 +117,23 @@ namespace costmap
       updated_ = true;
       builtin_interfaces::msg::Time finish = ros_clock_.now();
       rate.sleep();
-      double time_taken = (finish.nanosec - start.nanosec)/1e9;
-      if (time_taken > 1.0 / min_update_freq_) {
-        RCLCPP_WARN(this->get_logger(), "Costmap update loop failed. Desired frequency is %fHz."
-                                        "The loop actually took %f seconds", update_freq_, time_taken);
+      double time_taken = (finish.nanosec - start.nanosec) / 1e9;
+      if (time_taken > 1.0 / min_update_freq_)
+      {
+        RCLCPP_WARN(this->get_logger(),
+            "Costmap update loop failed. Desired frequency is %fHz. The loop actually took %f seconds", update_freq_, time_taken);
       }
     }
   }
 
   void CostmapROS::mapUpdate(){
     geometry_msgs::msg::PoseStamped pose;
+    pose.pose = odom_.pose.pose;
+    RCLCPP_INFO(this->get_logger(),"Initial pose %f, %f", pose.pose.position.x, pose.pose.position.y);
     if(getRobotPose(pose)){
-      double x = pose.pose.position.x, y = pose.pose.position.y, yaw = tf2::getYaw(pose.pose.orientation);
-      costmap_->update(x, y, yaw, rolling_window_);
+      RCLCPP_INFO(this->get_logger(),"Final pose %f, %f", pose.pose.position.x, pose.pose.position.y);
+//      double x = pose.pose.position.x, y = pose.pose.position.y, yaw = tf2::getYaw(pose.pose.orientation);
+      costmap_->update(pose.pose, rolling_window_);
       publisher_->prepareMap(costmap_);
     }
   }
@@ -144,7 +145,7 @@ namespace costmap
     try {
       rclcpp::Time time = rclcpp::Time(0);
       tf2::TimePoint tf2_time(std::chrono::nanoseconds(time.nanoseconds()));
-      geometry_msgs::msg::TransformStamped tfp = buffer_.lookupTransform(global_frame_, base_frame_, tf2_time);
+      geometry_msgs::msg::TransformStamped tfp = buffer_.lookupTransform("odom", global_frame_, tf2_time);
       tf2::doTransform(pose, pose, tfp);
     }
     catch(tf2::TransformException &ex) {
@@ -154,14 +155,14 @@ namespace costmap
     builtin_interfaces::msg::Time finish = ros_clock_.now();
     if(finish.sec - start.sec > transform_tolerance_){
       RCLCPP_WARN(this->get_logger(), "Costmap %s to %s transform timed out. Current time: %d, global_pose stamp %d, tolerance %d",
-                  global_frame_, base_frame_, finish.sec, pose.header.stamp, transform_tolerance_);
+                  global_frame_.c_str(), base_frame_.c_str(), finish.sec, pose.header.stamp, transform_tolerance_);
     }
+    return true;
   }
 
   void CostmapROS::mapPublishLoop(){
     rclcpp::Rate rate(publish_freq_);
     builtin_interfaces::msg::Time current;
-    bool published = false;
     while(rclcpp::ok()){
       if(!map_publish_thread_shutdown_) {
         rclcpp::Rate rate(publish_freq_);
@@ -171,25 +172,19 @@ namespace costmap
           return;
         }
         current = ros_clock_.now();
-        while(!published){
-         if(!updated_) {
+        while(!updated_) {
            RCLCPP_WARN(this->get_logger(), "Costmap publish loop failed. Desired frequency is %fHz.", min_publish_freq_);
-           rate.sleep();
-           continue;
-         }
-         else {
-           publisher_->publish();
-           updated_ = false;
-           published = true;
-         }
+           rclcpp::sleep_for(std::chrono::seconds(1));
         }
-        published = false;
+        publisher_->publish();
+        updated_ = false;
+
         builtin_interfaces::msg::Time finish = ros_clock_.now();
         rate.sleep();
         double time_taken = (finish.nanosec - start.nanosec)/1e9;
         if (time_taken > 1.0 / min_publish_freq_) {
-          RCLCPP_WARN(this->get_logger(), "Costmap publish loop failed. Desired frequency is %fHz."
-              "The loop actually took %f seconds", publish_freq_, time_taken);
+          RCLCPP_WARN(this->get_logger(),
+              "Costmap publish loop failed. Desired frequency is %fHz. The loop actually took %f seconds", publish_freq_, time_taken);
         }
       }
       else{
@@ -202,11 +197,13 @@ namespace costmap
   void CostmapROS::computeFreqLoop(){
     rclcpp::Rate rate(1.0);
     while(rclcpp::ok()){
-      if(!vel_init)
-        continue;
-      double linear = sqrt(pow(odom_.twist.twist.linear.x, 2) + pow(odom_.twist.twist.linear.y, 2) + pow(odom_.twist.twist.linear.z, 2));
-      double angular = sqrt(pow(odom_.twist.twist.angular.x, 2) + pow(odom_.twist.twist.angular.y, 2) + pow(odom_.twist.twist.angular.z, 2));
-      //TODO
+      if(vel_init) {
+        double linear = sqrt(pow(odom_.twist.twist.linear.x, 2) + pow(odom_.twist.twist.linear.y, 2)
+                                 + pow(odom_.twist.twist.linear.z, 2));
+        double angular = sqrt(pow(odom_.twist.twist.angular.x, 2) + pow(odom_.twist.twist.angular.y, 2)
+                                  + pow(odom_.twist.twist.angular.z, 2));
+        //TODO
+      }
       rate.sleep();
     }
   }

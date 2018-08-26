@@ -15,13 +15,14 @@ namespace costmap
           base_frame_(base_frame),
           minx_(0),
           miny_(0),
-          maxx_(10000),
-          maxy_(10000),
-          origin_x_(5000),
-          origin_y_(5000),
+          maxx_(size_x),
+          maxy_(size_y),
+          origin_x_(size_x/2),
+          origin_y_(size_y/2),
           size_x_(size_x),
           size_y_(size_y),
-          resolution_(resolution)
+          resolution_(resolution),
+          origin_init_(false)
   {
     int size = size_x * size_y;
     map_cell = new MapCell[size];
@@ -47,23 +48,24 @@ namespace costmap
     plugins_.push_back(plugin);
   }
 
-  void Costmap::updateOrigin(double x, double y, double yaw){
-    origin_x_ = 5000 - x / resolution_;
-    origin_y_ = 5000 - y / resolution_;
-    //TODO yaw
-  }
-
-  void Costmap::update(double x, double y, double yaw, bool rolling_window){
-    if(rolling_window)
-      updateOrigin(x, y, yaw);
+  void Costmap::update(const geometry_msgs::msg::Pose& origin, bool rolling_window){
+    double origin_x = -origin.position.x;
+    double origin_y = -origin.position.y;
+    if(rolling_window || !origin_init_){
+      origin_init_ = true;
+      map_origin_ = origin;
+    }
 
     std::vector<std::shared_ptr<Layer>>::iterator plugin;
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
-      (*plugin)->updateBounds(origin_x_, origin_y_, yaw, &minx_, &maxx_, &miny_, &maxy_, rolling_window);
+      (*plugin)->updateBounds(&minx_, &maxx_, &miny_, &maxy_, &origin_x, &origin_y, rolling_window);
     }
 
+    map_origin_.position.x = origin_x;
+    map_origin_.position.y = origin_y;
+
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
-      (*plugin)->updateCosts(map_cell, minx_, maxx_, miny_, maxy_, size_x_, size_y_);
+      (*plugin)->updateCosts(map_cell, minx_, maxx_, miny_, maxy_);
     }
   }
 }

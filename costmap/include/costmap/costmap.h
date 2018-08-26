@@ -9,6 +9,7 @@
 #include <memory>
 #include <vector>
 
+#include "geometry_msgs/msg/pose.hpp"
 #include "rclcpp/rclcpp.hpp"
 
 #include "costmap/map_cell.h"
@@ -21,21 +22,22 @@ namespace costmap
   Costmap(std::string global_frame, std::string base_frame, unsigned int size_x, unsigned int size_y,
       double resolution, unsigned char default_char);
   virtual ~Costmap();
-  void update(double x, double y, double yaw, bool rolling_window);
+  void update(const geometry_msgs::msg::Pose&, bool rolling_window);
   void loadPlugin(std::shared_ptr<Layer> plugin);
 
   std::string global_frame_, base_frame_;
   unsigned int minx_, miny_, maxx_, maxy_;
-  unsigned int origin_x_, origin_y_;
+  int origin_x_, origin_y_;
+
+  geometry_msgs::msg::Pose map_origin_;
+
   unsigned int size_x_, size_y_;
   double resolution_;
-  bool rolling_window_;
+  bool rolling_window_, origin_init_;
 
   MapCell* map_cell;
 
  private:
-    void updateOrigin(double x, double y, double yaw);
-
     std::vector<std::shared_ptr<Layer>> plugins_;
 };
 }

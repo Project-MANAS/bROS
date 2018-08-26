@@ -13,6 +13,10 @@ namespace costmap
   MapLayer::MapLayer() :
     Node("map_layer"),
     topic_("/map"),
+    minx_(0),
+    maxx_(0),
+    miny_(0),
+    maxy_(0),
     map_received_(false)
   {
     subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
@@ -24,69 +28,78 @@ namespace costmap
   }
 
   void MapLayer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y){
-    rclcpp::Rate rate(1.0);
+    size_x_ = size_x;
+    size_y_ = size_y;
     unsigned int size = size_x * size_y;
     map_cell = new MapCell[size];
-    minx_ = miny_ =  maxx_ = maxy_ = 0;
     origin_x_ = origin_x;
     origin_y_ = origin_y;
 
-    rclcpp::executors::SingleThreadedExecutor executor;
-    executor.add_node(this->get_node_base_interface());
-    while(rclcpp::ok() && !map_received_) {
-      executor.spin_some();
+    std::thread spin_thread = std::thread(&MapLayer::callback, this);
+    spin_thread.detach();
+  }
+
+  void MapLayer::callback() {
+    rclcpp::Rate rate(10.0);
+    while(rclcpp::ok()) {
+      rclcpp::spin_some(this->get_node_base_interface());
       rate.sleep();
     }
   }
 
   void MapLayer::incomingMap(const nav_msgs::msg::OccupancyGrid::SharedPtr map){
-    map_received_ = true;
-    double resolution = map->info.resolution;
-    unsigned int origin_x = origin_x_ - map->info.origin.position.x / resolution;
-    unsigned int origin_y = origin_y_ - map->info.origin.position.y / resolution;
-    unsigned int width = map->info.width, height = map->info.height;
-
-    RCLCPP_INFO(this->get_logger(),"originx%d", map->info.origin.position.x);
-    RCLCPP_INFO(this->get_logger(),"originy%d", map->info.origin.position.y);
-    RCLCPP_INFO(this->get_logger(),"width%d", map->info.width);
-    RCLCPP_INFO(this->get_logger(),"height%d", map->info.height);
-    unsigned int index = 0;
-    for(unsigned int i = origin_y - height / 2; i <= origin_y + height / 2; ++i){
-      for(unsigned int j = origin_x - width / 2; j <= origin_x + width / 2; ++j){
-        //RCLCPP_INFO(this->get_logger(),"%d",i*width +j);
-        map_cell[i * width + j].cost = (unsigned char) map->data[index++];
-      }
+    if(!map_received_){
+      map_received_ = true;
+      initial_x_ = map->info.origin.position.x;
+      initial_y_ = map->info.origin.position.y;
     }
 
-    minx_ = origin_x - width / 2;
-    maxx_ = origin_x + width / 2;
-    miny_ = origin_y - height / 2;
-    maxy_ = origin_y + height / 2;
-    RCLCPP_INFO(this->get_logger(),"%d, %d, %d, %d", minx_, maxx_, miny_, maxy_);
-    map_frame_ = map->header.frame_id;
-    width_ = map->info.width;
-    height_ = map->info.height;
+    double resolution = map->info.resolution;
+    unsigned int origin_x = origin_x_ + (int) ((map->info.origin.position.x - initial_x_) / resolution);
+    unsigned int origin_y = origin_y_ + (int) ((map->info.origin.position.y - initial_y_) / resolution);
+    unsigned int width = map->info.width, height = map->info.height;
+
+    RCLCPP_INFO(this->get_logger(),"actual origin x %f origin y%f", map->info.origin.position.x, map->info.origin.position.y);
+
+    unsigned int index = 0;
+    minx_ = origin_x - width / 2 - 1;
+    maxx_ = minx_ + width;
+    miny_ = origin_y - height / 2 - 1;
+    maxy_ = miny_ + height;
+
+    for(unsigned int i = miny_; i < maxy_; ++i)
+    {
+      for(unsigned int j = minx_; j < maxx_; ++j)
+      {
+        map_cell[i * size_x_ + j].cost = (unsigned char) map->data[index++];
+      }
+    }
   }
 
-  void MapLayer::updateBounds(unsigned int origin_x, unsigned int origin_y, double yaw, unsigned int* minx,
-                              unsigned int* maxx, unsigned int* miny, unsigned int* maxy, bool rolling_window){
+  void MapLayer::updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy,
+      double* origin_x, double* origin_y, bool rolling_window){
     if(rolling_window){
       return;
     }
+    *origin_x = initial_x_;
+    *origin_y = initial_y_;
     *minx = std::max(*minx, minx_);
     *maxx = std::min(*maxx, maxx_);
     *miny = std::max(*miny, miny_);
     *maxy = std::min(*maxy, maxy_);
   }
 
-  void MapLayer::updateCosts(MapCell* mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy,
-                             unsigned int size_x, unsigned int size_y){
-    for(unsigned int i = miny; i <= maxy; ++i){
-      for(unsigned int j = minx; j <= maxx; ++j){
-        mc[i*size_y + j].cost = std::max(mc[i*size_y + j].cost, map_cell[i*size_y + j].cost);
+  void MapLayer::updateCosts(MapCell* mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy)
+  {
+    for(unsigned int i = miny; i < maxy; ++i)
+    {
+      for(unsigned int j = minx; j < maxx; ++j)
+      {
+        mc[i * size_x_ + j].cost = std::max(mc[i * size_x_ + j].cost, map_cell[i * size_x_ + j].cost);
       }
     }
   }
+
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::MapLayer, costmap::Layer)
