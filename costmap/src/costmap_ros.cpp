@@ -15,7 +15,9 @@ namespace costmap
       base_frame_("base_link"),
       size_x_(100),
       size_y_(100),
-      resolution_(1.0),
+      resolution_(0.2),
+      cells_x_(0),
+      cells_y_(0),
       default_cost_(0),
       rolling_window_(false),
       buffer_(duration),
@@ -35,7 +37,9 @@ namespace costmap
       vel_init(false),
       pub_topic_("/costmap")
   {
-    costmap_ = new Costmap(global_frame_, base_frame_, size_x_, size_y_, resolution_, default_cost_);
+    cells_x_ = (unsigned int) (size_x_ / resolution_);
+    cells_y_ = (unsigned int) (size_y_ / resolution_);
+    costmap_ = new Costmap(global_frame_, base_frame_, cells_x_, cells_y_, resolution_, default_cost_);
 
     std::string type;
     for (char i : plugins_list_) {
@@ -91,7 +95,7 @@ namespace costmap
     try {
       std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
       costmap_->loadPlugin(plugin);
-      plugin->initialise(size_x_, size_y_, size_x_/2, size_y_/2);
+      plugin->initialise(cells_x_, cells_y_, cells_x_/2, cells_y_/2, resolution_);
     }
     catch (pluginlib::LibraryLoadException& e) {
       RCLCPP_ERROR(this->get_logger(), "Class %s does not exist", type.c_str());

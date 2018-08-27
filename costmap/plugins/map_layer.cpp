@@ -27,13 +27,14 @@ namespace costmap
     delete[] map_cell;
   }
 
-  void MapLayer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y){
+  void MapLayer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y, double resolution){
     size_x_ = size_x;
     size_y_ = size_y;
     unsigned int size = size_x * size_y;
     map_cell = new MapCell[size];
     origin_x_ = origin_x;
     origin_y_ = origin_y;
+    resolution_ = resolution;
 
     std::thread spin_thread = std::thread(&MapLayer::callback, this);
     spin_thread.detach();
@@ -55,13 +56,11 @@ namespace costmap
     }
 
     double resolution = map->info.resolution;
-    unsigned int origin_x = origin_x_ + (int) ((map->info.origin.position.x - initial_x_) / resolution);
-    unsigned int origin_y = origin_y_ + (int) ((map->info.origin.position.y - initial_y_) / resolution);
-    unsigned int width = map->info.width, height = map->info.height;
+    unsigned int origin_x = origin_x_ - (int) ((map->info.origin.position.x - initial_x_) / resolution);
+    unsigned int origin_y = origin_y_ - (int) ((map->info.origin.position.y - initial_y_) / resolution);
+    unsigned int width = (unsigned int) (map->info.width * resolution / resolution_);
+    unsigned int height = (unsigned int) (map->info.height * resolution / resolution_);
 
-    RCLCPP_INFO(this->get_logger(),"actual origin x %f origin y%f", map->info.origin.position.x, map->info.origin.position.y);
-
-    unsigned int index = 0;
     minx_ = origin_x - width / 2 - 1;
     maxx_ = minx_ + width;
     miny_ = origin_y - height / 2 - 1;
@@ -71,7 +70,8 @@ namespace costmap
     {
       for(unsigned int j = minx_; j < maxx_; ++j)
       {
-        map_cell[i * size_x_ + j].cost = (unsigned char) map->data[index++];
+        int index = (int)((i-miny_)*resolution_) * map->info.width + (int)((j-minx_)*resolution_);
+        map_cell[i*size_x_ + j].cost = (unsigned char) map->data[index];
       }
     }
   }

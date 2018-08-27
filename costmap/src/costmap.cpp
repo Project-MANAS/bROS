@@ -49,8 +49,8 @@ namespace costmap
   }
 
   void Costmap::update(const geometry_msgs::msg::Pose& origin, bool rolling_window){
-    double origin_x = -origin.position.x;
-    double origin_y = -origin.position.y;
+    double origin_x = origin.position.x - (size_x_ * resolution_ / 2);
+    double origin_y = origin.position.y - (size_y_ * resolution_ / 2);
     if(rolling_window || !origin_init_){
       origin_init_ = true;
       map_origin_ = origin;

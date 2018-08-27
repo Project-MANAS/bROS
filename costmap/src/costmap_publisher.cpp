@@ -45,8 +45,6 @@ namespace costmap{
     map.info.origin.position.z = 0.0;
     map.info.origin.orientation.w = 1.0;
 
-    RCLCPP_INFO(this->get_logger(),"origin final %f %f", map.info.origin.position.x, map.info.origin.position.y);
-
     int k = 0;
     map.data.resize(map.info.width * map.info.height);
     for(unsigned int i = costmap-> miny_; i < costmap-> maxy_; ++i){

@@ -44,6 +44,7 @@ class CostmapROS : public rclcpp::Node
 
   std::string global_frame_, base_frame_;
   unsigned int size_x_, size_y_;
+  unsigned int cells_x_, cells_y_;
   double resolution_;
   unsigned char default_cost_;
   bool rolling_window_;
