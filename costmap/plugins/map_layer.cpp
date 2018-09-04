@@ -55,17 +55,15 @@ namespace costmap
       initial_y_ = map->info.origin.position.y;
     }
 
-    double resolution = map->info.resolution;
-    unsigned int origin_x = origin_x_ - (int) ((map->info.origin.position.x - initial_x_) / resolution);
-    unsigned int origin_y = origin_y_ - (int) ((map->info.origin.position.y - initial_y_) / resolution);
-    unsigned int width = (unsigned int) (map->info.width * resolution / resolution_);
-    unsigned int height = (unsigned int) (map->info.height * resolution / resolution_);
+    unsigned int width = (unsigned int) (map->info.width / resolution_);
+    unsigned int height = (unsigned int) (map->info.height / resolution_);
 
-    minx_ = origin_x - width / 2 - 1;
+    minx_ = origin_x_ + (int) ((map->info.origin.position.x) / resolution_);
     maxx_ = minx_ + width;
-    miny_ = origin_y - height / 2 - 1;
+    miny_ = origin_y_ + (int) ((map->info.origin.position.y) / resolution_);
     maxy_ = miny_ + height;
 
+    RCLCPP_INFO(this->get_logger(), "%d %d %d %d", minx_, maxx_, miny_, maxy_);
     for(unsigned int i = miny_; i < maxy_; ++i)
     {
       for(unsigned int j = minx_; j < maxx_; ++j)
@@ -76,13 +74,10 @@ namespace costmap
     }
   }
 
-  void MapLayer::updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy,
-      double* origin_x, double* origin_y, bool rolling_window){
+  void MapLayer::updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy, bool rolling_window){
     if(rolling_window){
       return;
     }
-    *origin_x = initial_x_;
-    *origin_y = initial_y_;
     *minx = std::max(*minx, minx_);
     *maxx = std::min(*maxx, maxx_);
     *miny = std::max(*miny, miny_);

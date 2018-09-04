@@ -20,8 +20,7 @@ namespace costmap
     MapLayer();
     virtual ~MapLayer();
     virtual void initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y, double resolution);
-    virtual void updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy,
-        double* origin_x, double* origin_y, bool rolling_window);
+    virtual void updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy, bool rolling_window);
     virtual void updateCosts(MapCell* mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy);
 
    private:

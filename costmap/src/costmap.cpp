@@ -49,23 +49,27 @@ namespace costmap
   }
 
   void Costmap::update(const geometry_msgs::msg::Pose& origin, bool rolling_window){
-    double origin_x = origin.position.x - (size_x_ * resolution_ / 2);
-    double origin_y = origin.position.y - (size_y_ * resolution_ / 2);
-    if(rolling_window || !origin_init_){
-      origin_init_ = true;
-      map_origin_ = origin;
-    }
-
     std::vector<std::shared_ptr<Layer>>::iterator plugin;
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
-      (*plugin)->updateBounds(&minx_, &maxx_, &miny_, &maxy_, &origin_x, &origin_y, rolling_window);
+      (*plugin)->updateBounds(&minx_, &maxx_, &miny_, &maxy_, rolling_window);
     }
-
-    map_origin_.position.x = origin_x;
-    map_origin_.position.y = origin_y;
 
     for(plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin){
       (*plugin)->updateCosts(map_cell, minx_, maxx_, miny_, maxy_);
     }
+
+    if(rolling_window || !origin_init_){
+      origin_init_ = true;
+      map_origin_ = origin;
+      double origin_x = origin.position.x - (size_x_ * resolution_ / 2);
+      double origin_y = origin.position.y - (size_y_ * resolution_ / 2);
+      map_origin_.position.x = origin_x;
+      map_origin_.position.y = origin_y;
+    }
+    else{
+      map_origin_.position.x = ((double)minx_-origin_x_)*resolution_;
+      map_origin_.position.y = ((double)miny_-origin_y_)*resolution_;
+    }
+    RCLCPP_INFO(this->get_logger(),"%f %f", map_origin_.position.x, map_origin_.position.y);
   }
 }

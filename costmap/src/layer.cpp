@@ -19,8 +19,7 @@ namespace costmap
 
   }
 
-  void Layer::updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy,
-      double* origin_x, double* origin_y, bool rolling_window){
+  void Layer::updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy, bool rolling_window){
   }
 
   void Layer::updateCosts(MapCell* mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy){
