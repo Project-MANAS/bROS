@@ -133,10 +133,7 @@ namespace costmap
   void CostmapROS::mapUpdate(){
     geometry_msgs::msg::PoseStamped pose;
     pose.pose = odom_.pose.pose;
-    RCLCPP_INFO(this->get_logger(),"Initial pose %f, %f", pose.pose.position.x, pose.pose.position.y);
     if(getRobotPose(pose)){
-      RCLCPP_INFO(this->get_logger(),"Final pose %f, %f", pose.pose.position.x, pose.pose.position.y);
-//      double x = pose.pose.position.x, y = pose.pose.position.y, yaw = tf2::getYaw(pose.pose.orientation);
       costmap_->update(pose.pose, rolling_window_);
       publisher_->prepareMap(costmap_);
     }

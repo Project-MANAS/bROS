@@ -70,6 +70,5 @@ namespace costmap
       map_origin_.position.x = ((double)minx_-origin_x_)*resolution_;
       map_origin_.position.y = ((double)miny_-origin_y_)*resolution_;
     }
-    RCLCPP_INFO(this->get_logger(),"%f %f", map_origin_.position.x, map_origin_.position.y);
   }
 }

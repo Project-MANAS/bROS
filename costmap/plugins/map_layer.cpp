@@ -72,7 +72,6 @@ namespace costmap
     maxx_ = minx_ + width;
     maxy_ = miny_ + height;
 
-    RCLCPP_INFO(this->get_logger(), "%d %d %d %d", minx_, maxx_, miny_, maxy_);
     for(unsigned int i = miny_; i < maxy_; ++i)
     {
       for(unsigned int j = minx_; j < maxx_; ++j)

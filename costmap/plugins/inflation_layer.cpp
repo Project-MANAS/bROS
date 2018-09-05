@@ -16,6 +16,16 @@ namespace costmap
   InflationLayer::~InflationLayer(){
 
   }
+
+  void InflationLayer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
+                                 double resolution, bool rolling_window){
+  }
+
+  void InflationLayer::updateBounds(unsigned int* minx, unsigned int* maxx, unsigned int* miny, unsigned int* maxy, bool rolling_window){
+  }
+
+  void InflationLayer::updateCosts(MapCell* mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy) {
+  }
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::InflationLayer, costmap::Layer)
