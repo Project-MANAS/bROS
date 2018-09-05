@@ -13,13 +13,13 @@ namespace costmap
       Node("costmap_ros"),
       global_frame_("map"),
       base_frame_("base_link"),
-      size_x_(1000),
-      size_y_(1000),
-      resolution_(1.0),
+      size_x_(200),
+      size_y_(200),
+      resolution_(0.5),
       cells_x_(0),
       cells_y_(0),
       default_cost_(0),
-      rolling_window_(false),
+      rolling_window_(true),
       buffer_(duration),
       tfl(buffer_),
       plugin_loader_("costmap", "costmap::Layer"),
@@ -95,7 +95,7 @@ namespace costmap
     try {
       std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
       costmap_->loadPlugin(plugin);
-      plugin->initialise(cells_x_, cells_y_, cells_x_/2, cells_y_/2, resolution_);
+      plugin->initialise(cells_x_, cells_y_, cells_x_/2, cells_y_/2, resolution_, rolling_window_);
     }
     catch (pluginlib::LibraryLoadException& e) {
       RCLCPP_ERROR(this->get_logger(), "Class %s does not exist", type.c_str());

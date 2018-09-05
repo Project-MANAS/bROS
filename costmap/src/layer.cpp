@@ -15,7 +15,8 @@ namespace costmap
   {
 
   }
-  void Layer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y, double resolution){
+  void Layer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
+      double resolution, bool rolling_window){
 
   }
 
