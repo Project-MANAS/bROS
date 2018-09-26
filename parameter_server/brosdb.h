@@ -11,7 +11,6 @@ namespace brosdb {
         redisContext *context = redisConnect("127.0.0.1", 6379);
         redisReply *reply = (redisReply*)redisCommand(context, "GET %b", key.c_str(), key.length());
         memcpy(value, reply->str, sizeof(T));
-        std::cout<<"size"<<" "<<sizeof(T)<<" "<<typeid(T).name()<<"\n";
         freeReplyObject(reply);
     }
 
