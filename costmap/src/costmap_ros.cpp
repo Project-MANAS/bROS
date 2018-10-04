@@ -101,11 +101,11 @@ void CostmapROS::pluginLoader(std::string type) {
 
 void CostmapROS::mapUpdateLoop() {
   rclcpp::Rate rate(update_freq_);
-  builtin_interfaces::msg::Time current;
+  rclcpp::Time current;
   updated_ = false;
   while (rclcpp::ok()) {
     rclcpp::Rate rate(update_freq_);
-    builtin_interfaces::msg::Time start = ros_clock_.now();
+    rclcpp::Time start = ros_clock_.now();
     if (update_freq_ <= 0.0) {
       RCLCPP_WARN(this->get_logger(), "Costmap update frequency is set to %f. Skipping update loop",
                   min_publish_freq_);
@@ -114,9 +114,9 @@ void CostmapROS::mapUpdateLoop() {
     current = ros_clock_.now();
     mapUpdate();
     updated_ = true;
-    builtin_interfaces::msg::Time finish = ros_clock_.now();
+    rclcpp::Time finish = ros_clock_.now();
     rate.sleep();
-    double time_taken = (finish.nanosec - start.nanosec) / 1e9;
+    double time_taken = (finish.nanoseconds() - start.nanoseconds()) / 1e9;
     if (time_taken > 1.0 / min_update_freq_) {
       RCLCPP_WARN(this->get_logger(),
                   "Costmap update loop failed. Desired frequency is %fHz. The loop actually took %f seconds",
@@ -137,7 +137,7 @@ void CostmapROS::mapUpdate() {
 bool CostmapROS::getRobotPose(geometry_msgs::msg::PoseStamped &pose) {
   pose.header.frame_id = base_frame_;
   pose.header.stamp = ros_clock_.now();
-  builtin_interfaces::msg::Time start = ros_clock_.now();
+  rclcpp::Time start = ros_clock_.now();
   try {
     rclcpp::Time time = rclcpp::Time(0);
     tf2::TimePoint tf2_time(std::chrono::nanoseconds(time.nanoseconds()));
@@ -148,11 +148,11 @@ bool CostmapROS::getRobotPose(geometry_msgs::msg::PoseStamped &pose) {
     RCLCPP_WARN(this->get_logger(), "%s", ex.what());
     return false;
   }
-  builtin_interfaces::msg::Time finish = ros_clock_.now();
-  if (finish.sec - start.sec > transform_tolerance_) {
+  rclcpp::Time finish = ros_clock_.now();
+  if (RCL_NS_TO_S(finish.nanoseconds()) - RCL_NS_TO_S(start.nanoseconds()) > transform_tolerance_) {
     RCLCPP_WARN(this->get_logger(),
                 "Costmap %s to %s transform timed out. Current time: %d, global_pose stamp %d, tolerance %d",
-                global_frame_.c_str(), base_frame_.c_str(), finish.sec, pose.header.stamp,
+                global_frame_.c_str(), base_frame_.c_str(), RCL_NS_TO_S(finish.nanoseconds()), pose.header.stamp,
                 transform_tolerance_);
   }
   return true;
@@ -160,11 +160,11 @@ bool CostmapROS::getRobotPose(geometry_msgs::msg::PoseStamped &pose) {
 
 void CostmapROS::mapPublishLoop() {
   rclcpp::Rate rate(publish_freq_);
-  builtin_interfaces::msg::Time current;
+  rclcpp::Time current;
   while (rclcpp::ok()) {
     if (!map_publish_thread_shutdown_) {
       rclcpp::Rate rate(publish_freq_);
-      builtin_interfaces::msg::Time start = ros_clock_.now();
+      rclcpp::Time start = ros_clock_.now();
       if (publish_freq_ <= 0.0) {
         RCLCPP_WARN(this->get_logger(), "Costmap publish frequency is set to %f. Skipping publish loop.",
                     min_publish_freq_);
@@ -179,9 +179,9 @@ void CostmapROS::mapPublishLoop() {
       publisher_->publish();
       updated_ = false;
 
-      builtin_interfaces::msg::Time finish = ros_clock_.now();
+      rclcpp::Time finish = ros_clock_.now();
       rate.sleep();
-      double time_taken = (finish.nanosec - start.nanosec) / 1e9;
+      double time_taken = (finish.nanoseconds() - start.nanoseconds()) / 1e9;
       if (time_taken > 1.0 / min_publish_freq_) {
         RCLCPP_WARN(this->get_logger(),
                     "Costmap publish loop failed. Desired frequency is %fHz. The loop actually took %f seconds",
