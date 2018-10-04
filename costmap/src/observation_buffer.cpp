@@ -9,6 +9,7 @@ ObservationBuffer::ObservationBuffer(std::string topic_name, int observation_kee
                                      double min_obstacle_height, double max_obstacle_height, double obstacle_range,
                                      double raytrace_range, tf2_ros::Buffer &tf_buffer, std::string global_frame,
                                      std::string sensor_frame, rclcpp::Clock *ros_clock) :
+    topic_name_(topic_name),
     observation_keep_time_(observation_keep_time, 0),
     expected_update_rate_(expected_update_rate, 0),
     min_obstacle_height_(min_obstacle_height),
@@ -30,7 +31,7 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 &cloud) 
 
   observation_list_.push_front(Observation());
   std::string origin_frame = sensor_frame_ == "" ? cloud.header.frame_id : sensor_frame_;
-
+  try
   {
     geometry_msgs::msg::PointStamped local_origin;
     local_origin.header.stamp = cloud.header.stamp;
@@ -83,10 +84,10 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 &cloud) 
     observation_cloud.header.stamp = cloud.header.stamp;
     observation_cloud.header.frame_id = global_frame_cloud.header.frame_id;
   }
-//  catch (TransformException &ex) {
-//    observation_list_.pop_front();
-//    return;
-//  }
+  catch (tf2::TransformException &ex) {
+    observation_list_.pop_front();
+    return;
+  }
   this->resetLastUpdated();
   this->purgeOldObservations();
 }
