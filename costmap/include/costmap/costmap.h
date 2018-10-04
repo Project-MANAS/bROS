@@ -14,15 +14,17 @@
 
 #include "costmap/map_cell.h"
 #include "costmap/layer.h"
-namespace costmap
-{
- class Costmap : public rclcpp::Node
-{
+
+namespace costmap {
+class Costmap : public rclcpp::Node {
  public:
   Costmap(std::string global_frame, std::string base_frame, unsigned int size_x, unsigned int size_y,
-      double resolution, unsigned char default_char);
+          double resolution, unsigned char default_char);
+
   virtual ~Costmap();
-  void update(const geometry_msgs::msg::Pose&, bool rolling_window);
+
+  void update(const geometry_msgs::msg::Pose &, bool rolling_window);
+
   void loadPlugin(std::shared_ptr<Layer> plugin);
 
   std::string global_frame_, base_frame_;
@@ -35,10 +37,10 @@ namespace costmap
   double resolution_;
   bool rolling_window_, origin_init_;
 
-  MapCell* map_cell;
+  MapCell *map_cell;
 
  private:
-    std::vector<std::shared_ptr<Layer>> plugins_;
+  std::vector<std::shared_ptr<Layer>> plugins_;
 };
 }
 

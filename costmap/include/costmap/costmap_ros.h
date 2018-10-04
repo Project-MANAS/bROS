@@ -22,24 +22,30 @@
 #include <costmap/costmap.h>
 #include <costmap/map_layer.h>
 #include <costmap/costmap_publisher.h>
-namespace costmap
-{
-class CostmapROS : public rclcpp::Node
-{
+
+namespace costmap {
+class CostmapROS : public rclcpp::Node {
  public:
   CostmapROS();
+
   virtual ~CostmapROS();
 
  protected:
-  Costmap* costmap_;
+  Costmap *costmap_;
 
  private:
   void pluginLoader(std::string type);
+
   void mapUpdateLoop();
+
   void mapUpdate();
-  bool getRobotPose(geometry_msgs::msg::PoseStamped& pose);
+
+  bool getRobotPose(geometry_msgs::msg::PoseStamped &pose);
+
   void mapPublishLoop();
+
   void computeFreqLoop();
+
   void velocityCallback(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   std::string global_frame_, base_frame_;
@@ -66,7 +72,7 @@ class CostmapROS : public rclcpp::Node
   double min_publish_freq_, publish_freq_;
   std::thread map_publish_thread_;
   bool map_publish_thread_shutdown_;
-  CostmapPublisher* publisher_;
+  CostmapPublisher *publisher_;
 
   std::thread compute_freq_thread_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription_;

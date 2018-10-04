@@ -47,7 +47,8 @@ add_library(costmap_ros
         src/costmap_ros.cpp
         src/layer.cpp
         src/map_cell.cpp
-        src/costmap_publisher.cpp)
+        src/costmap_publisher.cpp
+        src/observation_buffer.cpp)
 
 ament_target_dependencies(costmap_ros
         rclcpp
@@ -60,8 +61,6 @@ ament_target_dependencies(costmap_ros
 
 add_library(layers SHARED
         plugins/map_layer.cpp
-        plugins/obstacle_layer.cpp
-        plugins/inflation_layer.cpp
         )
 ament_target_dependencies(layers rclcpp)
 target_link_libraries(layers costmap_ros)
