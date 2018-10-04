@@ -28,7 +28,7 @@ MapLayer::~MapLayer() {
   delete[] map_cell;
 }
 
-void MapLayer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
+void MapLayer::initialise(std::string global_frame, unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
                           double resolution, bool rolling_window) {
   size_x_ = size_x;
   size_y_ = size_y;

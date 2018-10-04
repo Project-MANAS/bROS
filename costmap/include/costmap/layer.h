@@ -6,6 +6,7 @@
 #define COSTMAP_LAYER_H_
 
 #include "costmap/map_cell.h"
+#include <string>
 
 namespace costmap {
 class Layer {
@@ -14,7 +15,7 @@ class Layer {
 
   virtual ~Layer();
 
-  virtual void initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
+  virtual void initialise(std::string global_frame, unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
                           double resolution, bool rolling_window);
 
   virtual void updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,

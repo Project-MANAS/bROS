@@ -13,6 +13,7 @@
 #include "costmap/map_cell.h"
 #include "costmap/layer.h"
 
+
 namespace costmap {
 class MapLayer : public costmap::Layer, rclcpp::Node {
  public:
@@ -20,7 +21,7 @@ class MapLayer : public costmap::Layer, rclcpp::Node {
 
   virtual ~MapLayer();
 
-  virtual void initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
+  virtual void initialise(std::string global_frame, unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
                           double resolution, bool rolling_window);
 
   virtual void updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,

@@ -89,7 +89,7 @@ void CostmapROS::pluginLoader(std::string type) {
   try {
     std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
     costmap_->loadPlugin(plugin);
-    plugin->initialise(cells_x_, cells_y_, cells_x_ / 2, cells_y_ / 2, resolution_, rolling_window_);
+    plugin->initialise(global_frame_, cells_x_, cells_y_, cells_x_ / 2, cells_y_ / 2, resolution_, rolling_window_);
   }
   catch (pluginlib::LibraryLoadException &e) {
     RCLCPP_ERROR(this->get_logger(), "Class %s does not exist", type.c_str());

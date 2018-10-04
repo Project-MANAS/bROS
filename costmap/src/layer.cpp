@@ -13,7 +13,7 @@ Layer::~Layer() {
 
 }
 
-void Layer::initialise(unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
+void Layer::initialise(std::string global_frame, unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
                        double resolution, bool rolling_window) {
 
 }
