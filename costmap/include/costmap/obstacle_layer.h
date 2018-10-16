@@ -7,6 +7,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "costmap/layer.h"
+#include "costmap/map_cell.h"
+#include "costmap/observation_buffer.h"
 
 namespace costmap {
 class ObstacleLayer : public Layer, rclcpp::Node {
@@ -21,8 +23,26 @@ class ObstacleLayer : public Layer, rclcpp::Node {
   virtual void updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,
                             bool rolling_window);
 
-  virtual void
-  updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy);
+  virtual void updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy);
+
+ private:
+
+  void callback();
+
+  unsigned int size_x, size_y_, origin_x_, origin_y_;
+  double resolution_;
+  bool rolling_window_;
+
+  MapCell *map_cell;
+
+  rclcpp::Clock ros_clock_;
+  std::string global_frame_;
+  tf2_buffer *tf_buffer_;
+  std::vector<boost::shared_ptr<ObservationBuffer>> observation_buffers_;
+  std::vector<boost::shared_ptr<ObservationBuffer>> marking_buffers_;
+  std::vector<boost::shared_ptr<ObservationBuffer>> clearing_buffers_;
+
+  std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> observation_subscriptions_;
 };
 }
 
