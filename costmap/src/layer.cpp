@@ -18,8 +18,7 @@ void Layer::initialise(std::string global_frame, unsigned int size_x, unsigned i
 
 }
 
-void Layer::updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,
-                         bool rolling_window) {
+void Layer::updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy) {
 }
 
 void Layer::updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy) {

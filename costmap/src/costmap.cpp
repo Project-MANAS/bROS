@@ -46,13 +46,11 @@ void Costmap::loadPlugin(std::shared_ptr<Layer> plugin) {
 }
 
 void Costmap::update(const geometry_msgs::msg::Pose &origin, bool rolling_window) {
-  std::vector < std::shared_ptr < Layer >> ::iterator
-  plugin;
-  for (plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin) {
-    (*plugin)->updateBounds(&minx_, &maxx_, &miny_, &maxy_, rolling_window);
+  for (auto plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin) {
+    (*plugin)->updateBounds(&minx_, &maxx_, &miny_, &maxy_);
   }
 
-  for (plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin) {
+  for (auto plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin) {
     (*plugin)->updateCosts(map_cell, minx_, maxx_, miny_, maxy_);
   }
 

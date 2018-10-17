@@ -32,7 +32,7 @@ ObstacleLayer::initialise(std::string global_frame,
   rolling_window_ = rolling_window;
   map_cell = new MapCell[size_x_ * size_y_];
 
-  // TODO (Squadrick): Add brosdb support
+//   TODO (Squadrick): Add brosdb support
   std::vector<std::string> topic_names;
 
   for (auto it = topic_names.begin(); it != topics_names.end(); ++it) {
@@ -99,13 +99,19 @@ void ObstacleLayer::pointCloud2Callback(const sensor_msgs::msg::PointCloud2Const
 
 void ObstacleLayer::updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,
                                  bool rolling_window) {
-  
+
 }
 
 void ObstacleLayer::updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigned int miny,
                                 unsigned int maxy) {
 
 }
+
+
+void MapLayer::updatePose(const nav_msgs::msg::Odometry::SharedPtr pose) {
+  pose_ = *pose;
+}
+
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::ObstacleLayer, costmap::Layer

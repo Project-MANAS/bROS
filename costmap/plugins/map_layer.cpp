@@ -28,8 +28,13 @@ MapLayer::~MapLayer() {
   delete[] map_cell;
 }
 
-void MapLayer::initialise(std::string global_frame, unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
-                          double resolution, bool rolling_window) {
+void MapLayer::initialise(std::string global_frame,
+                          unsigned int size_x,
+                          unsigned int size_y,
+                          unsigned int origin_x,
+                          unsigned int origin_y,
+                          double resolution,
+                          bool rolling_window) {
   size_x_ = size_x;
   size_y_ = size_y;
   unsigned int size = size_x * size_y;
@@ -77,9 +82,8 @@ void MapLayer::incomingMap(const nav_msgs::msg::OccupancyGrid::SharedPtr map) {
   }
 }
 
-void MapLayer::updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,
-                            bool rolling_window) {
-  if (rolling_window) {
+void MapLayer::updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy) {
+  if (rolling_window_) {
     return;
   }
   *minx = std::max(*minx, minx_);
