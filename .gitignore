@@ -22,3 +22,6 @@ cmake-build-release/
 *.bag.active
 *.stl
 *.directory
+build
+log
+install
