@@ -33,16 +33,17 @@ class ObstacleLayer : public Layer, rclcpp::Node {
   double resolution_;
   bool rolling_window_;
 
-  MapCell *map_cell;
+  MapCell *map_cell_;
 
   rclcpp::Clock ros_clock_;
   std::string global_frame_;
   tf2_buffer *tf_buffer_;
+  nav_msgs::msg::Odometry pose_;
   std::vector<boost::shared_ptr<ObservationBuffer>> observation_buffers_;
   std::vector<boost::shared_ptr<ObservationBuffer>> marking_buffers_;
   std::vector<boost::shared_ptr<ObservationBuffer>> clearing_buffers_;
-
   std::vector<rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr> observation_subscriptions_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
 };
 }
 

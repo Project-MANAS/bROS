@@ -31,14 +31,11 @@ class MapLayer : public costmap::Layer, rclcpp::Node {
 
  private:
   void incomingMap(const nav_msgs::msg::OccupancyGrid::SharedPtr map);
-
-  void updatePose(const nav_msgs::msg::Odometry::SharedPtr pose);
-
   void callback();
 
   std::string topic_, map_frame_;
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr subscription_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr subscription2_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
   MapCell *map_cell;
   unsigned int minx_, maxx_, miny_, maxy_;
   int origin_x_, origin_y_;

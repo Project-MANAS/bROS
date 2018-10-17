@@ -9,10 +9,27 @@
 namespace costmap {
 ObstacleLayer::ObstacleLayer() : Node("obstacle_layer"), ros_clock_(ROS_RCL_TIME) {
   RCLCPP_INFO(this->get_logger(), "Using costmap's ObstacleLayer");
+  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+      "odom",
+      [this](const nav_msgs::msg::Odometry::SharedPtr pose) {
+        pose_ = *pose;
+      });
 }
 
 ObstacleLayer::~ObstacleLayer() {
+  while(clearing_observations_.size() > 0)
+    clearning_observations_.pop_back();
 
+  while(marking_observations_.size() > 0)
+    marking_observations_.pop_back();
+
+  while(observation_subscriptions_.size() > 0)
+    observation_subscriptions_.pop_back();
+
+  while(observation_buffers_.size() > 0)
+    observation_buffers_.pop_back();
+
+  delete [] map_cell_;
 }
 
 void
@@ -23,6 +40,7 @@ ObstacleLayer::initialise(std::string global_frame,
                           unsigned int origin_y,
                           double resolution,
                           bool rolling_window) {
+
   global_frame_ = global_frame;
   size_x_ = size_x;
   size_y_ = size_y;
@@ -30,7 +48,7 @@ ObstacleLayer::initialise(std::string global_frame,
   origin_y_ = origin_y;
   resolution_ = resolution;
   rolling_window_ = rolling_window;
-  map_cell = new MapCell[size_x_ * size_y_];
+  map_cell_ = new MapCell[size_x_ * size_y_];
 
 //   TODO (Squadrick): Add brosdb support
   std::vector<std::string> topic_names;
@@ -106,7 +124,6 @@ void ObstacleLayer::updateCosts(MapCell *mc, unsigned int minx, unsigned int max
                                 unsigned int maxy) {
 
 }
-
 
 void MapLayer::updatePose(const nav_msgs::msg::Odometry::SharedPtr pose) {
   pose_ = *pose;

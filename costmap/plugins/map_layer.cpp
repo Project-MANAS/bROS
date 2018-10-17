@@ -20,8 +20,12 @@ MapLayer::MapLayer() :
     rolling_window_(false) {
   subscription_ =
       this->create_subscription<nav_msgs::msg::OccupancyGrid>(topic_, std::bind(&MapLayer::incomingMap, this, _1));
-  subscription2_ =
-      this->create_subscription<nav_msgs::msg::Odometry>("odom", std::bind(&MapLayer::updatePose, this, _1));
+
+  odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
+      "odom",
+      [this](const nav_msgs::msg::Odometry::SharedPtr pose) {
+        pose_ = *pose;
+      });
 }
 
 MapLayer::~MapLayer() {
@@ -101,9 +105,6 @@ MapLayer::updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigne
   }
 }
 
-void MapLayer::updatePose(const nav_msgs::msg::Odometry::SharedPtr pose) {
-  pose_ = *pose;
-}
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::MapLayer, costmap::Layer
