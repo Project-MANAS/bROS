@@ -1,4 +1,3 @@
-#pragma once
 #ifndef BROS_PARAMETER_SERVER_BROSDB_
 #define BROS_PARAMETER_SERVER_BROSDB_
 
