@@ -29,7 +29,6 @@ void Layer::updateBounds(double *minx, double *maxx, double *miny, double *maxy)
 void Layer::updateCosts(MapCell *mc, double *minx, double *maxx, double *miny, double *maxy) {
 }
 
-
 void Layer::touch(double x, double y, double *minx, double *maxx, double *miny, double *maxy) {
   *minx = std::min(x, *minx);
   *maxx = std::max(x, *maxx);
