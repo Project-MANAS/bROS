@@ -6,6 +6,7 @@
 #define COSTMAP_LAYER_H_
 
 #include "costmap/map_cell.h"
+#include "brosdb.h"
 #include <string>
 
 namespace costmap {

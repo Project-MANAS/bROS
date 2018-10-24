@@ -52,6 +52,8 @@ ObstacleLayer::initialise(std::string global_frame,
   map_ = new MapCell[size_x_ * size_y_];
 
 //   TODO (Squadrick): Add brosdb support
+  int a = 5;
+  brosdb::set("set", a);
   std::vector<std::string> topic_names;
 
   for (auto it = topic_names.begin(); it != topic_names.end(); ++it) {

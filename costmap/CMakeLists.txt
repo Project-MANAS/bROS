@@ -41,6 +41,7 @@ if(BUILD_TESTING)
 endif()
 
 include_directories(include)
+include_directories(../parameter_server)
 
 add_library(costmap_ros
         src/costmap.cpp
