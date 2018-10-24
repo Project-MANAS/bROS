@@ -5,7 +5,7 @@
 #include "costmap/observation_buffer.h"
 
 namespace costmap {
-ObservationBuffer::ObservationBuffer(std::string topic_name, int observation_keep_time, int expected_update_rate,
+ObservationBuffer::ObservationBuffer(std::string topic_name, double observation_keep_time, double expected_update_rate,
                                      double min_obstacle_height, double max_obstacle_height, double obstacle_range,
                                      double raytrace_range, tf2_ros::Buffer &tf_buffer, std::string global_frame,
                                      std::string sensor_frame, rclcpp::Clock *ros_clock) :
@@ -24,6 +24,7 @@ ObservationBuffer::ObservationBuffer(std::string topic_name, int observation_kee
 
 ObservationBuffer::~ObservationBuffer() {
   ros_clock_ = nullptr;
+  observation_list_.clear();
 }
 
 void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 &cloud) {
@@ -31,8 +32,7 @@ void ObservationBuffer::bufferCloud(const sensor_msgs::msg::PointCloud2 &cloud) 
 
   observation_list_.push_front(Observation());
   std::string origin_frame = sensor_frame_ == "" ? cloud.header.frame_id : sensor_frame_;
-  try
-  {
+  try {
     geometry_msgs::msg::PointStamped local_origin;
     local_origin.header.stamp = cloud.header.stamp;
     local_origin.header.frame_id = origin_frame;

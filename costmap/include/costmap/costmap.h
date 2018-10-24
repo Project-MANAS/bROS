@@ -28,7 +28,7 @@ class Costmap : public rclcpp::Node {
   void loadPlugin(std::shared_ptr<Layer> plugin);
 
   std::string global_frame_, base_frame_;
-  unsigned int minx_, miny_, maxx_, maxy_;
+  double minx_, miny_, maxx_, maxy_;
   int origin_x_, origin_y_;
 
   geometry_msgs::msg::Pose map_origin_;

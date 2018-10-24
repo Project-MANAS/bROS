@@ -5,9 +5,10 @@
 #include "costmap/obstacle_layer.h"
 
 #include <pluginlib/class_list_macros.hpp>
+#include <cmath>
 
 namespace costmap {
-ObstacleLayer::ObstacleLayer() : Node("obstacle_layer"), ros_clock_(ROS_RCL_TIME) {
+ObstacleLayer::ObstacleLayer() : Node("obstacle_layer"), ros_clock_(RCL_ROS_TIME) {
   RCLCPP_INFO(this->get_logger(), "Using costmap's ObstacleLayer");
   odom_sub_ = this->create_subscription<nav_msgs::msg::Odometry>(
       "odom",
@@ -17,19 +18,19 @@ ObstacleLayer::ObstacleLayer() : Node("obstacle_layer"), ros_clock_(ROS_RCL_TIME
 }
 
 ObstacleLayer::~ObstacleLayer() {
-  while(clearing_observations_.size() > 0)
-    clearning_observations_.pop_back();
+  while (clearing_buffers_.size() > 0)
+    clearing_buffers_.pop_back();
 
-  while(marking_observations_.size() > 0)
-    marking_observations_.pop_back();
+  while (marking_buffers_.size() > 0)
+    marking_buffers_.pop_back();
 
-  while(observation_subscriptions_.size() > 0)
+  while (observation_subscriptions_.size() > 0)
     observation_subscriptions_.pop_back();
 
-  while(observation_buffers_.size() > 0)
+  while (observation_buffers_.size() > 0)
     observation_buffers_.pop_back();
 
-  delete [] map_cell_;
+  delete[] map_;
 }
 
 void
@@ -48,12 +49,12 @@ ObstacleLayer::initialise(std::string global_frame,
   origin_y_ = origin_y;
   resolution_ = resolution;
   rolling_window_ = rolling_window;
-  map_cell_ = new MapCell[size_x_ * size_y_];
+  map_ = new MapCell[size_x_ * size_y_];
 
 //   TODO (Squadrick): Add brosdb support
   std::vector<std::string> topic_names;
 
-  for (auto it = topic_names.begin(); it != topics_names.end(); ++it) {
+  for (auto it = topic_names.begin(); it != topic_names.end(); ++it) {
     double observation_keep_time = 0.0;
     double expected_update_rate = 0.0;
     double min_obstacle_height = 0.0;
@@ -73,10 +74,10 @@ ObstacleLayer::initialise(std::string global_frame,
                                   max_obstacle_height,
                                   obstacle_range,
                                   raytrace_range,
-                                  *tf_,
+                                  *tf_buffer_,
                                   global_frame_,
                                   sensor_frame,
-                                  ros_clock_)));
+                                  &ros_clock_)));
 
     if (clearing) {
       clearing_buffers_.push_back(observation_buffers_.back());
@@ -87,13 +88,10 @@ ObstacleLayer::initialise(std::string global_frame,
     }
 
     observation_subscriptions_.push_back(
-        this->create_subscription<sensor_msgs::msg::PointCloud2>(
-            *it,
-            std::bind(
-                ObstacleLayer::pointCloud2Callback,
-                this,
-                _1,
-                observation_buffers_.back())));
+        this->create_subscription<sensor_msgs::msg::PointCloud2>(*it,
+                                                                 std::bind(&ObstacleLayer::incomingPointCloud,
+                                                                           this,
+                                                                           std::placeholders::_1)));
   }
   std::thread spin_thread = std::thread(&ObstacleLayer::callback, this);
   spin_thread.detach();
@@ -107,28 +105,70 @@ void ObstacleLayer::callback() {
   }
 }
 
-void ObstacleLayer::pointCloud2Callback(const sensor_msgs::msg::PointCloud2ConstPtr &message,
-                                        const boost::shared_ptr<ObservationBuffer> &buffer) {
-  // Squadrick: Locking the Buffer, since the costmap update loop runs asynchronously
+void ObstacleLayer::incomingPointCloud(const sensor_msgs::msg::PointCloud2::SharedPtr pointcloud) {
+  // (Squadrick): Locking the Buffer, since the costmap update loop runs asynchronously
+  auto buffer = *(observation_buffers_.end());
   buffer->lock();
-  buffer->bufferCloud(*message);
+  buffer->bufferCloud(*pointcloud);
   buffer->unlock();
 }
 
-void ObstacleLayer::updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy,
-                                 bool rolling_window) {
+void ObstacleLayer::updateBounds(double *min_x, double *max_x, double *min_y, double *max_y) {
+  double robot_x = pose_.pose.pose.position.x;
+  double robot_y = pose_.pose.pose.position.y;
 
+  // update origin
+  origin_x_ = robot_x - gridsToMetres(size_x_) / 2;
+  origin_y_ = robot_y - gridsToMetres(size_y_) / 2;
 }
 
-void ObstacleLayer::updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigned int miny,
-                                unsigned int maxy) {
+void ObstacleLayer::updateCosts(MapCell *mc, double *minx, double *maxx, double *miny,
+                                double *maxy) {
+  std::vector<Observation> clearing_observations, marking_observations;
 
+  for (auto buffer = clearing_buffers_.begin(); buffer != clearing_buffers_.end(); ++buffer) {
+    (*buffer)->lock();
+    (*buffer)->getObservations(clearing_observations);
+    (*buffer)->unlock();
+  }
+
+  for (auto buffer = marking_buffers_.begin(); buffer != marking_buffers_.end(); ++buffer) {
+    (*buffer)->lock();
+    (*buffer)->getObservations(marking_observations);
+    (*buffer)->unlock();
+  }
+
+  for (auto it = clearing_observations.begin(); it != clearing_observations.end(); ++it) {
+    // NOTE: Pls don't convert &(*it), it won't work
+    raytraceFreespace(&(*it), minx, maxx, miny, maxy);
+  }
+
+  for (auto it = marking_observations.begin(); it != marking_observations.end(); ++it) {
+    auto square = std::bind((double (*)(double, int)) std::pow, std::placeholders::_1, 2);
+    sensor_msgs::msg::PointCloud2 cloud = *(it->cloud_);
+    sensor_msgs::PointCloud2Iterator<float> iter_xyz(cloud, "xyz");
+
+    for (; iter_xyz != iter_xyz.end(); ++iter_xyz) {
+      double px = iter_xyz[0];
+      double py = iter_xyz[1];
+      double pz = iter_xyz[2];
+
+      double sq_ob_dist = square(px - it->origin_.x) + square(py - it->origin_.y) + square(pz - it->origin_.z);
+
+      if (sq_ob_dist > square(it->obstacle_range_)) {
+        // point is too far away
+        continue;
+      }
+      unsigned int mx, my;
+      if (!worldToMap(px, py, mx, my)) {
+        // tranform to map failed
+        continue;
+      }
+      mc[mx * size_x_ + my].cost = 100; // LETHAL
+      touch(mx, my, minx, miny, maxx, maxy);
+    }
+  }
 }
-
-void MapLayer::updatePose(const nav_msgs::msg::Odometry::SharedPtr pose) {
-  pose_ = *pose;
-}
-
 }
 
 PLUGINLIB_EXPORT_CLASS(costmap::ObstacleLayer, costmap::Layer

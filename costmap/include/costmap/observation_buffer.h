@@ -50,7 +50,7 @@ class Observation {
 
 class ObservationBuffer {
  public:
-  ObservationBuffer(std::string topic_name, int observation_keep_time, int expected_update_rate,
+  ObservationBuffer(std::string topic_name, double observation_keep_time, double expected_update_rate,
                     double min_obstacle_height, double max_obstacle_height, double obstacle_range,
                     double raytrace_range, tf2_ros::Buffer &tf_buffer, std::string global_frame,
                     std::string sensor_frame, rclcpp::Clock *ros_clock);

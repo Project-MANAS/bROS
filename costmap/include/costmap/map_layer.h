@@ -13,7 +13,6 @@
 #include "costmap/map_cell.h"
 #include "costmap/layer.h"
 
-
 namespace costmap {
 class MapLayer : public costmap::Layer, rclcpp::Node {
  public:
@@ -21,13 +20,18 @@ class MapLayer : public costmap::Layer, rclcpp::Node {
 
   virtual ~MapLayer();
 
-  virtual void initialise(std::string global_frame, unsigned int size_x, unsigned int size_y, unsigned int origin_x, unsigned int origin_y,
-                          double resolution, bool rolling_window);
+  virtual void initialise(std::string global_frame,
+                          unsigned int size_x,
+                          unsigned int size_y,
+                          unsigned int origin_x,
+                          unsigned int origin_y,
+                          double resolution,
+                          bool rolling_window);
 
-  virtual void updateBounds(unsigned int *minx, unsigned int *maxx, unsigned int *miny, unsigned int *maxy);
+  virtual void updateBounds(double *min_x, double *max_x, double *min_y, double *max_y);
 
   virtual void
-  updateCosts(MapCell *mc, unsigned int minx, unsigned int maxx, unsigned int miny, unsigned int maxy);
+  updateCosts(MapCell *mc, double *min_x, double *max_x, double *min_y, double *max_y);
 
  private:
   void incomingMap(const nav_msgs::msg::OccupancyGrid::SharedPtr map);
@@ -36,12 +40,7 @@ class MapLayer : public costmap::Layer, rclcpp::Node {
   std::string topic_, map_frame_;
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr subscription_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odom_sub_;
-  MapCell *map_cell;
-  unsigned int minx_, maxx_, miny_, maxy_;
-  int origin_x_, origin_y_;
-  unsigned int size_x_, size_y_;
-  double resolution_;
-  bool map_received_, rolling_window_;
+
   nav_msgs::msg::Odometry pose_;
 };
 }

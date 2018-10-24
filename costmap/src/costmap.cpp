@@ -51,7 +51,7 @@ void Costmap::update(const geometry_msgs::msg::Pose &origin, bool rolling_window
   }
 
   for (auto plugin = plugins_.begin(); plugin != plugins_.end(); ++plugin) {
-    (*plugin)->updateCosts(map_cell, minx_, maxx_, miny_, maxy_);
+    (*plugin)->updateCosts(map_cell, &minx_, &maxx_, &miny_, &maxy_);
   }
 
   if (rolling_window || !origin_init_) {
@@ -62,8 +62,8 @@ void Costmap::update(const geometry_msgs::msg::Pose &origin, bool rolling_window
     map_origin_.position.x = origin_x;
     map_origin_.position.y = origin_y;
   } else {
-    map_origin_.position.x = ((double) minx_ - origin_x_) * resolution_;
-    map_origin_.position.y = ((double) miny_ - origin_y_) * resolution_;
+    map_origin_.position.x = (minx_ - origin_x_) * resolution_;
+    map_origin_.position.y = (miny_ - origin_y_) * resolution_;
   }
 }
 }
