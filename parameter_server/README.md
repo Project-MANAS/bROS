@@ -44,12 +44,12 @@ C++ and Python wrapper to facilitate key-value store with the Redis database.
     #include "parameter_server/brosdb.h"
     
     int main() {
-    int a=5;
-    std::string str("foo");
-    brosdb::set(str, a);
-    int b;
-    brosdb::get(str, &b);
-    std::cout<<b;
+        int a=5;
+        std::string str("foo");
+        brosdb::set(str, a);
+        int b;
+        brosdb::get(str, &b);
+        std::cout<<b;
     }
     ```
 * Python
