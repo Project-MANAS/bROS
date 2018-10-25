@@ -22,8 +22,7 @@ CostmapROS::CostmapROS() :
     buffer_(duration),
     tfl(buffer_),
     plugin_loader_("costmap", "costmap::Layer"),
-    plugins_list_("costmap::MapLayer", "costmap::ObstacleLayer"),
-//      plugins_list_("costmap::MapLayer, , costmap::InflationLayer"),
+    plugins_list_("costmap::MapLayer"),
     ros_clock_(RCL_ROS_TIME),
     min_update_freq_(2.0),
     update_freq_(min_update_freq_),
@@ -87,6 +86,7 @@ CostmapROS::~CostmapROS() {
 void CostmapROS::pluginLoader(std::string type) {
   RCLCPP_INFO(this->get_logger(), "Loading class %s", type.c_str());
   try {
+    std::cout << "test1" << std::endl;
     std::shared_ptr<Layer> plugin = plugin_loader_.createSharedInstance(type);
     costmap_->loadPlugin(plugin);
     plugin->initialise(global_frame_, cells_x_, cells_y_, cells_x_ / 2, cells_y_ / 2, resolution_, rolling_window_);

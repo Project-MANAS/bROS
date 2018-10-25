@@ -8,6 +8,7 @@
 #include "costmap/map_cell.h"
 #include "brosdb.h"
 #include <string>
+#include <cmath>
 
 namespace costmap {
 class Layer {
@@ -50,6 +51,11 @@ class Layer {
   inline double gridsToMetres(double gridLength) const {
     return (gridLength - 0.5) * resolution_;
   }
+
+  unsigned int metresToGrids(double worldLength) {
+    return (unsigned int) std::max(0.0, std::ceil(worldLength / resolution_));
+  }
+
   void touch(double x, double y, double *minx, double *maxx, double *miny, double *maxy);
 
   unsigned int minx_, maxx_, miny_, maxy_;
